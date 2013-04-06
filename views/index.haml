@@ -25,7 +25,7 @@
                 %p
                     You send a json-object containing an array of URLs to subscribe to and the callback. Example:
                 %pre
-                    wget -O - -q [request, :hostname]/watches --post-data='{"urls": ["http://www.example.com/"], "callback": "http://www.example.com/callback"}
+                    wget -O - -q #{request.host}/watches --post-data='{"urls": ["http://www.example.com/"], "callback": "http://www.example.com/callback"}
             %li
                 rsspusher will send the callback a GET-request containing a challenge your callback has to repeat. Example:
                 %pre= "require 'sinatra'\n\nget '/' do\n    return param[\"challenge\"]\nend"
