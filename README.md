@@ -3,7 +3,7 @@ rsspusher
 
 Subscribes to feeds and notifies you as fast as possible
 
-See the [demo](http://desolate-cove.eu01.aws.af.cm/) for an explanation.
+See the [demo](http://rsspusher.eu01.aws.af.cm/) for an explanation.
 
 Install
 =======
