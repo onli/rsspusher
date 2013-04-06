@@ -1,0 +1,14 @@
+html {
+    font-family: ubuntu, helvetica, arial, sans-serif;
+}
+
+body {
+    margin-top: 2em;
+    margin: auto;
+    max-width: 800px;
+}
+
+pre {
+    overflow: auto;
+    word-wrap: break-word;
+}

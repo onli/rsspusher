@@ -1,0 +1,57 @@
+!!! 5
+%html
+    %head
+        %title rsspusher - push feed-updates to you
+        %meta{charset: "utf-8"}
+        %link{rel: "stylesheet", href: "/style.css"}
+    %body
+        %h1
+            rsspusher 
+        %h2
+            What is rsspusher?
+        %p
+            rsspusher is a service where you can subscribe to a feed. It will send you the update of the feeds to a callback-URL you specify. Think
+            %a{href: "http://superfeedr.com/"}
+                superfeedr
+            in amateurish and free.
+
+        %p
+            It is thought as helpful building-block for those developers building their own RSS Reader after Google Readers shutdown.
+
+        %h2
+            Protocol
+        %ol
+            %li
+                %p
+                    You send a json-object containing an array of URLs to subscribe to and the callback. Example:
+                %pre
+                    wget -O - -q [request, :hostname]/watches --post-data='{"urls": ["http://www.example.com/"], "callback": "http://www.example.com/callback"}
+            %li
+                rsspusher will send the callback a GET-request containing a challenge your callback has to repeat. Example:
+                %pre= "require 'sinatra'\n\nget '/' do\n    return param[\"challenge\"]\nend"
+            %li
+                As soon as rsspusher notices an update, it will POST your callback with the parameters :url, containing the url of the feed, and :newEntries, containing an json-object with the new items of the feed since the last update.
+
+        %h2
+            How does it work internally?
+        %p
+            Instead of polling all the given feeds, it tries to subscribe to them using
+            %a{href: "https://code.google.com/p/pubsubhubbub/"} pubsubhubbub
+            or
+            %a{href: "http://rsscloud.org/"} rsscloud
+            (both used by blogs on wordpress.com).
+            If it can't subscribe to them, it resorts to polling them regularly. Yahoo Pipes are used to convert the feeds to json and for some additional stuff.
+            But see yourself,
+            %a{title: "onli/rsspusher - Github", href: "https://github.com/onli/rsspusher"} the code is on github
+            \.
+             
+        %h2
+            How to test it?
+        %p
+            This is a demo, running on a free
+            %a{href: "https://www.appfog.com/"} appfrog-instance
+            \. You can subscribe to this URL and it will notify you, if everything works. You could also
+            %a{title: "onli/rsspusher - Github", href: "https://github.com/onli/rsspusher"} grab the code
+            and test it locally.
+
+    
