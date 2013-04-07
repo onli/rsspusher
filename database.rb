@@ -9,18 +9,11 @@ class Database
             #@db    # create a singleton - if this class-variable is uninitialized, this will fail and can then be initialized
         #rescue
             #@db = SQLite3::Database.new "rssnotifier.db"
-            require "pg"
             services = JSON.parse(ENV['VCAP_SERVICES'])
             postgresql_key = services.keys.select { |svc| svc =~ /postgresql/i }.first
             postgresql = services[postgresql_key].first['credentials']
             postgresql_conn = {:host => postgresql['hostname'], :port => postgresql['port'], :user => postgresql['user'], :password => postgresql['password'], :dbname => postgresql['name']}
             @db = PG.connect(postgresql_conn)
-
-            # heroku
-            #db = URI.parse(ENV['DATABASE_URL'] || 'postgres://kstfqxrrfxxgxo:Szo6wnDAO5pkC9TowTlraYRdlb@ec2-54-243-235-100.compute-1.amazonaws.com:5432/ddo4jn3fk5j55e')
-            #@db = PG::Connection.open(:dbname => db.path[1..-1], :user => db.user, :password => db.password, :port => db.port, :host => db.host, :sslmode => 'require')
-            # local
-            #@db = PG::Connection.open(:dbname => 'onli', :user => 'onli', :port => 5433)
 
             begin
                 puts "creating Database"
@@ -199,13 +192,11 @@ class Database
         begin
             #@db.execute("DELETE FROM register_pending WHERE url = ?", url)
             @db.exec("DELETE FROM register_pending WHERE url = $1", [url])
-            puts "deleted from register_pending"
         rescue => error
             puts "error clearing #{url} from register_pending: #{error}"
         end
-        puts leaseSeconds
+
         if leaseSeconds > 0
-            puts "leaseSeconds > 0"
             self.setLeaseSeconds(url, leaseSeconds)
         end
         @db.finish
@@ -289,5 +280,15 @@ class Database
         end
     end
 
+    def deletePage(page)
+        return false if page.callback == nil
+        begin
+            @db.exec("DELETE FROM watches WHERE url = $1 and callback = $2", [page.url, page.callback})
+        rescue => error
+            puts "error deleting page #{url}: #{error}"
+        ensure
+            @db.finish
+        end
+    end
 
 end

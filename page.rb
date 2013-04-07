@@ -18,22 +18,18 @@ class Page
 
         if args.length == 2
             ! self.isFeed? and Database.new.setFeedURL(self.getFeedURL, url)
-            success = self.subscribe
-            self.save(success)
         end
     end
 
     def subscribe
         pubsubhub, rssCloud = self.getSubscribeOptions
         topic = self.getFeedURL
-        puts "pubsubhub: #{pubsubhub}"
         if pubsubhub
             Database.new.toRegister(topic)
             success = Hub.new(pubsubhub).subscribe(topic)
             return success if success
         end
 
-        puts "rssCloud: #{rssCloud}"
         if rssCloud
             Database.new.toRegister(topic)
             success = RssCloud.new(rssCloud).subscribe(topic)
@@ -112,16 +108,13 @@ class Page
     end
 
     def notifySubscribers
-        puts "notifySubscribers for url #{self.url}"
         begin
             newEntries = Pipe.new.getEntriesAfter(self.getFeedURL, Time.at(Database.new.getLastUpdate(self.url)).rfc2822, "json")
         rescue => error
             puts "error getting new entries: #{error}"
         end
-        puts "newEntries fetched"
         Database.new.setLastUpdate(self.url, self.getLastUpdate)
         Database.new.getCallbacks(self.url).each do |callback|
-            puts "found callback #{callback}"
             begin
                 RestClient.post callback, {:url => self.url, :newEntries => newEntries}
             rescue => error
@@ -146,5 +139,9 @@ class Page
     def save(success)
         Database.new.savePage(self, success)
         Database.new.setLastUpdate(self.url, self.getLastUpdate)     # older posts aren't new just because we didnt see them before
+    end
+
+    def delete
+        Database.new.deletePage(self)
     end
 end

@@ -15,6 +15,21 @@ set :server, "thin"
 set :protection, except: :ip_spoofing
 use Rack::Session::Pool
 
+helpers do
+    def challenge!(url)
+        begin
+            challenge = SecureRandom.hex(16)
+            response = RestClient.get url, {:params => {:challenge => challenge}}
+            if response != challenge
+                throw(:halt, [401, "Echoed value didn't match challenge"])
+            end
+        rescue => error
+            puts "error confirming subscription: #{error}"
+            throw(:halt, [401, "An Error occured while confirming subscription (echo challenge)\n"])
+        end
+    end
+end
+
 configure do
     pollThread = Thread.new() {
         while true
@@ -47,30 +62,27 @@ configure do
 end
 
 get '/' do
-    # TODO: Describe the protocol here (test a different template-language than erb)
     haml :index
 end
 
 post '/watches' do
-    puts "got watch request"
     data = JSON.parse(request.body.string)
-    puts "data parsed"
-    data["urls"].each{|url| puts "url: #{url}"}
-    puts "callback: #{data["callback"]}"
-    begin
-        challenge = SecureRandom.hex(16)
-        response = RestClient.get data["callback"], {:params => {:challenge => challenge}}
-        puts "response: #{response}"
-        if response != challenge
-            throw(:halt, [401, "Echoed value didn't match challenge"])
-        end
-    rescue => error
-        puts "error confirming subscription: #{error}"
-        throw(:halt, [401, "An Error occured while confirming subscription (echo challenge)\n"])
-    end
+    challenge! data["callback"]
+    
     data["urls"].each do |url|
-        puts "Creating page for #{url}"
+        page = Page.new(url, data["callback"])
+        subscribed = page.subscribe
+        page.save(subscribed)
+    end
+end
+
+delete '/watches' do
+     data = JSON.parse(request.body.string)
+    challenge! data["callback"]
+    
+    data["urls"].each do |url|
         Page.new(url, data["callback"])
+        page.delete
     end
 end
 
@@ -79,9 +91,7 @@ post '/pubsubhubbub' do
 end
 
 get '/pubsubhubbub' do
-    puts "got request to confirm PuSH"
     if Database.new.register?(params["hub.topic"]) || Database.new.isWatched?(params["hub.topic"])   # if already saved, this is a renewal
-        puts "PuSH request valid"
         Database.new.finishRegisterRequest(params["hub.topic"], params["hub.lease_seconds"].to_i)
         return params["hub.challenge"]
     end
@@ -92,7 +102,6 @@ post '/rssCloud' do
 end
 
 get '/rssCloud' do
-    puts params
     if Database.new.register?(params["url"]) || Database.new.isWatched?(params["url"])
         Database.new.finishRegisterRequest(params["url"], 86400)    # rsscloud-subscriptions are always only valid for 24h
         return params["challenge"]
