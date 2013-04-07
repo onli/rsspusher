@@ -283,7 +283,7 @@ class Database
     def deletePage(page)
         return false if page.callback == nil
         begin
-            @db.exec("DELETE FROM watches WHERE url = $1 and callback = $2", [page.url, page.callback})
+            @db.exec("DELETE FROM watches WHERE url = $1 and callback = $2", [page.url, page.callback])
         rescue => error
             puts "error deleting page #{url}: #{error}"
         ensure
