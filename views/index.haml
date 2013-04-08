@@ -31,6 +31,11 @@
                 %pre= "require 'sinatra'\n\nget '/' do\n    return param[\"challenge\"]\nend"
             %li
                 As soon as rsspusher notices an update, it will POST your callback with the parameters :url, containing the url of the feed, and :newEntries, containing an json-object with the new items of the feed since the last update.
+            %li
+                %p
+                    To unsubscribe, repeat steps 1 and 2 with a DELETE request. Example:
+                %pre
+                    curl -X DELETE #{request.host}/watches --data '{"urls": ["http://www.example.com/"], "callback": "http://www.example.com/callback"}'
 
         %h2
             How does it work internally?
