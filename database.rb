@@ -16,7 +16,6 @@ class Database
             @db = PG.connect(postgresql_conn)
 
             begin
-                puts "creating Database"
                 #@db.execute "CREATE TABLE IF NOT EXISTS watches(
                                 #url TEXT,
                                 #callback TEXT,
@@ -88,8 +87,8 @@ class Database
 
     def getLastUpdate(url)
         begin
-            #return Time.at(@db.execute("SELECT lastUpdate FROM updates WHERE url = ?", url)[0]['lastUpdate']).to_i
-            return Time.at(@db.exec("SELECT lastUpdate FROM updates WHERE url = $1", [url])[0]['lastUpdate']).to_i
+            #return @db.execute("SELECT lastUpdate FROM updates WHERE url = ?", url)[0]['lastUpdate'].to_i
+            return @db.exec("SELECT lastUpdate FROM updates WHERE url = $1", [url])[0]["lastupdate"].to_i
          rescue => error
             puts "error getting lastUpdate: #{error}"
             puts "return 0"
@@ -188,7 +187,6 @@ class Database
     end
 
     def finishRegisterRequest(url, leaseSeconds)
-        puts "finish register"
         begin
             #@db.execute("DELETE FROM register_pending WHERE url = ?", url)
             @db.exec("DELETE FROM register_pending WHERE url = $1", [url])
@@ -203,7 +201,6 @@ class Database
     end
 
     def setLeaseSeconds(url, leaseSeconds)
-        puts "set lease seconds"
         begin
             if leaseSeconds > 0
                 #@db.execute("UPDATE
@@ -216,7 +213,6 @@ class Database
                                 #? = (SELECT url FROM feeds WHERE feedURL = ?)", leaseSeconds, url, url, url)
                 now = Time.now.to_i
                 leaseTill = now + leaseSeconds;
-                puts leaseTill
                 @db.exec("UPDATE
                                 watches
                             SET
@@ -225,13 +221,10 @@ class Database
                                 url = $2
                             OR
                                 $2 = (SELECT url FROM feeds WHERE feedURL = $2)", [leaseTill, url])
-                puts "leaseTill updated"
             end
         rescue => error
             puts "error setting leaseSeconds: #{error}"
             return false
-        ensure
-            @db.finish
         end
     end
 

@@ -75,7 +75,7 @@ class Page
                 end
             end.compact[0]
         rescue Nokogiri::XML::XPath::SyntaxError => error
-            puts "No PuSH-link found: #{error}"
+            puts "No PuSH-link found in #{feedURL}: #{error}"
             pubSubHubNode = nil
         end
 
@@ -129,7 +129,7 @@ class Page
         rescue => error
             puts "couldn't get page update: #{error}"
             begin
-                return Pipe.new.getFeedUpdate(self.url)["value"]["items"][0]["content"]
+                return Pipe.new.getLastFeedUpdate(self.url)["value"]["items"][0]["content"]
             rescue => error2
                 puts "couldn't get feed update2: #{error2}"
             end

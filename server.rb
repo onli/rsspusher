@@ -66,7 +66,12 @@ get '/' do
 end
 
 post '/watches' do
-    data = JSON.parse(request.body.string)
+    begin
+        data = JSON.parse(request.body.string)
+    rescue JSON::ParserError => error
+        puts "could not decode data: #{error}"
+        return
+    end
     challenge! data["callback"]
     
     data["urls"].each do |url|
@@ -77,12 +82,16 @@ post '/watches' do
 end
 
 delete '/watches' do
-     data = JSON.parse(request.body.string)
+    begin
+        data = JSON.parse(request.body.string)
+    rescue JSON::ParserError => error
+        puts "could not decode data: #{error}"
+        return
+    end
     challenge! data["callback"]
     
     data["urls"].each do |url|
-        Page.new(url, data["callback"])
-        page.delete
+        Page.new(url, data["callback"]).delete
     end
 end
 

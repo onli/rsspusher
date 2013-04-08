@@ -19,7 +19,6 @@ class Pipe
 
     def getEntriesAfter(url, date, format)
         begin
-            puts "getEntriesAfter-Pipe: #{url}, #{date}, #{format}"
             return JSON.parse(RestClient.get "http://pipes.yahoo.com/pipes/pipe.run", {:params => { :_id => "e87634cfeb5f508bbd5397d68a1b8c31",
                                                                                                 :_render => format,
                                                                                                 :url => url,
