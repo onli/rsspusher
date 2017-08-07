@@ -10,7 +10,7 @@ class RssCloud
         begin
             response = RestClient.post @url, :port  => 80,
                                              :path => "/rssCloud",
-                                             :domain => "http://desolate-cove.eu01.aws.af.cm",
+                                             :domain => "http://desolate-cove.eu01.aws.af.cm",  # TODO: Proper url
                                              :notifyProcedure => "",
                                              :protocol =>  "http-post",
                                              :url1 => topic 

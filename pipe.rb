@@ -2,16 +2,23 @@ require 'rest_client'
 require 'json'
 
 
-# Class communicating with Yahoo Pipes. Basically only a wrapper to have proper function-names.
-# As a convention, these functions here will not give the proper result, but the json/rss-data
-# to get the proper result from.
+# This formerly offloaded work to Yahoo! Pipes. Now we do the work in this class.
+# It might be better to integrate this into proper objects.
 class Pipe
 
     def getFeedURL(url)
         begin
-            return JSON.parse(RestClient.get "http://pipes.yahoo.com/pipes/pipe.run", {:params => { :_id => "0fdbebb1f79888ae54aca294f434329c",
-                                                                                                    :_render => "json",
-                                                                                                    :url => url}})
+            page = RestClient.get url
+            if page[0..50].include?('<html') || page[0..50].include?('<HTML')
+            # we got a page link instead of a feed, but we can try to look for a linked feed
+                doc = Nokogiri::HTML(page)
+                origUrl = URI.parse(URI.escape(url))
+                url = doc.css('link[rel="alternate"]').first['href']
+                if (! url.include?('http://') && ! url.include?('https://') )
+                    url = "#{origUrl.scheme}://#{origUrl.host}/" + url
+                end
+            end
+            return url
         rescue => error
             puts "error getting feedURL-Pipe: #{error}"
         end
@@ -19,10 +26,16 @@ class Pipe
 
     def getEntriesAfter(url, date, format)
         begin
-            return JSON.parse(RestClient.get "http://pipes.yahoo.com/pipes/pipe.run", {:params => { :_id => "e87634cfeb5f508bbd5397d68a1b8c31",
-                                                                                                :_render => format,
-                                                                                                :url => url,
-                                                                                                :date => date }})
+            feedUrl = self.getFeedURL(url)
+            feed = RestClient.get url
+            feed = FeedParser::Parser.parse(feed)
+            newItems = []
+            feed.items.each do |item|
+                if item.updated > date 
+                    newItems.push({:title => item.title, :url => item.url, :content => item.content, :updated => item.updated})
+                end
+            end
+            return JSON.generate(newItems)
         rescue => error
             puts "error getting EntriesAfter-Pipe: #{error}"
         end
@@ -30,9 +43,9 @@ class Pipe
 
     def getLastPageUpdate(url)
         begin
-            return JSON.parse(RestClient.get "http://pipes.yahoo.com/pipes/pipe.run", {:params => {:_id => "f19a20691088d9512ef67a3bef500e89",
-                                                                                        :_render => "json",
-                                                                                        :url => url}})
+            page = RestClient.get url
+            feed = FeedParser::Parser.parse(page)
+            return feed.update
         rescue => error
             puts "error getting lastPageUpdate-Pipe: #{error}"
         end
@@ -40,9 +53,9 @@ class Pipe
     
     def getLastFeedUpdate(url)
         begin
-            return JSON.parse(RestClient.get "http://pipes.yahoo.com/pipes/pipe.run", {:params => {:_id => "43dfd827c6b34c871ca3a8476433d9a5",
-                                                                                        :_render => "json",
-                                                                                        :url => url}})
+            page = RestClient.get self.getFeedURL(url)
+            feed = FeedParser::Parser.parse(page)
+            return feed.updated
         rescue => error
             puts "error getting lastFeedUpdate-Pipe: #{error}"
         end

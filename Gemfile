@@ -1,9 +1,10 @@
 source :rubygems
 
 gem "sinatra"
-gem "thin"
-gem 'pg'
+gem "puma"
+gem 'sqlite'
 gem 'json'
 gem 'nokogiri'
 gem 'rest-client'
 gem 'haml'
+gem 'feedparser'

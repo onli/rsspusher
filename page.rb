@@ -41,7 +41,7 @@ class Page
     def getFeedURL
         if ! @feedURL
             begin
-                @feedURL = Pipe.new.getFeedURL(self.url)["value"]["items"][0]["link"].sub("https", "http")
+                @feedURL = Pipe.new.getFeedURL(self.url)
             rescue => error
                 puts "error getting feedUrl: #{error}"
                 @feedURL = nil
@@ -51,15 +51,11 @@ class Page
     end
 
     def isFeed?
-        if self.getFeedURL
-            return false       # if it has a feed-url, it itself can't be a feed 
-        end
+        page = RestClient.get url
         begin
-            if Pipe.new.getEntriesAfter(self.url, 0, "json")["count"] > 0
-                return true     # if yahoo finds entries, this is a valid feed
-            end
-        rescue => error
-            puts error
+            FeedParser::Parser.parse(page)
+            return true   # if feedparser could parse it it is a valid feed
+        rescue
         end
         return false
     end
@@ -125,11 +121,11 @@ class Page
 
     def getLastUpdate
         begin
-            return Pipe.new.getLastPageUpdate(self.url)["value"]["items"][0]["content"]
+            return Pipe.new.getLastPageUpdate(self.url)
         rescue => error
             puts "couldn't get page update: #{error}"
             begin
-                return Pipe.new.getLastFeedUpdate(self.url)["value"]["items"][0]["content"]
+                return Pipe.new.getLastFeedUpdate(self.url)
             rescue => error2
                 puts "couldn't get feed update2: #{error2}"
             end
