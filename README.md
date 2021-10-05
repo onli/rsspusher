@@ -1,9 +1,9 @@
 rsspusher
 =========
 
-Subscribes to feeds and notifies you, in realtime if possible, of updates to the feed.
+Please note: This project is not active.
 
-See the [demo](http://rsspusher.eu01.aws.af.cm/) for an explanation.
+Subscribes to feeds and notifies you, in realtime if possible, of updates to the feed.
 
 Install
 =======
